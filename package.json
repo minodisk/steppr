@@ -1,0 +1,30 @@
+{
+  "name": "steppr",
+  "version": "0.0.1",
+  "description": "Terminal spinner for step execution",
+  "main": "lib/index.js",
+  "author": "Daisuke Mino",
+  "license": "MIT",
+  "scripts": {
+    "build": "rm -rf lib/ && yarn flow-remove-types -d lib/ src/ && yarn format",
+    "test": "yarn jest",
+    "format": "yarn prettier --write src/*.js lib/*.js",
+    "prepublish": "yarn build"
+  },
+  "jest": {
+    "transform": {
+      "\\.js$": "./bin/jest-transform"
+    }
+  },
+  "dependencies": {
+    "cli-spinners": "^1.1.0",
+    "log-update": "^2.3.0"
+  },
+  "devDependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "flow-bin": "^0.59.0",
+    "flow-remove-types": "^1.2.3",
+    "jest": "^21.2.1",
+    "prettier": "^1.9.2"
+  }
+}
