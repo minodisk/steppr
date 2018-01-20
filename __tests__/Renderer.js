@@ -167,104 +167,104 @@ describe("Renderer", () => {
       }));
   });
 
-  describe(`end with info`, () => {
-    it("should render spinner", () =>
-      new Promise(resolve => {
-        const renderer = new Renderer({ stream: noop });
-        const step = new Step("foo");
-        renderer.add(step);
-        const cases = [
-          {
-            exec: () => {},
-            want: `${chalk.gray("⠋")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.gray("⠙")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.gray("⠹")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.gray("⠸")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.gray("⠼")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.cyan("⠴")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.cyan("⠦")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.cyan("⠧")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.cyan("⠇")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.cyan("⠏")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.cyan("⠋")} foo${chalk.gray(" -> bar")}`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.cyan("⠙")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.cyan("⠹")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.cyan("⠸")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.cyan("⠼")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.cyan("⠴")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.cyan("⠦")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.cyan("⠧")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.cyan("⠇")} foo`,
-          },
-          {
-            exec: () => {},
-            want: `${chalk.cyan("⠏")} foo`,
-          },
-        ];
-        renderer.on("rendered", (output: string) => {
-          const want = wants.shift();
-          if (want == null) {
-            resolve();
-            return;
-          }
-          expect(output).toBe(want);
-        });
-        renderer.start();
-        step.start();
-      }));
-  });
+  // describe(`end with info`, () => {
+  //   it("should render spinner", () =>
+  //     new Promise(resolve => {
+  //       const renderer = new Renderer({ stream: noop });
+  //       const step = new Step("foo");
+  //       renderer.add(step);
+  //       const cases = [
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.gray("⠋")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.gray("⠙")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.gray("⠹")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.gray("⠸")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.gray("⠼")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.cyan("⠴")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.cyan("⠦")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.cyan("⠧")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.cyan("⠇")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.cyan("⠏")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.cyan("⠋")} foo${chalk.gray(" -> bar")}`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.cyan("⠙")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.cyan("⠹")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.cyan("⠸")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.cyan("⠼")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.cyan("⠴")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.cyan("⠦")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.cyan("⠧")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.cyan("⠇")} foo`,
+  //         },
+  //         {
+  //           exec: () => {},
+  //           want: `${chalk.cyan("⠏")} foo`,
+  //         },
+  //       ];
+  //       renderer.on("rendered", (output: string) => {
+  //         const want = wants.shift();
+  //         if (want == null) {
+  //           resolve();
+  //           return;
+  //         }
+  //         expect(output).toBe(want);
+  //       });
+  //       renderer.start();
+  //       step.start();
+  //     }));
+  // });
 });
