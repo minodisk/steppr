@@ -1,14 +1,18 @@
 {
   "name": "steppr",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Terminal spinner for step execution",
   "main": "lib/index.js",
   "author": "Daisuke Mino",
   "license": "MIT",
-  "files": ["LICENSE", "README.md", "lib", "package.json"],
+  "files": [
+    "LICENSE",
+    "README.md",
+    "lib",
+    "package.json"
+  ],
   "scripts": {
-    "build":
-      "rm -rf lib/ && yarn flow-remove-types -d lib/ src/ && yarn format",
+    "build": "rm -rf lib/ && yarn flow-remove-types -d lib/ src/ && yarn format",
     "test": "yarn jest",
     "format": "yarn prettier --write src/*.js lib/*.js",
     "prepublish": "yarn build"
