@@ -1,6 +1,6 @@
 {
   "name": "steppr",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Terminal spinner for step execution",
   "main": "lib/index.js",
   "author": "Daisuke Mino",
