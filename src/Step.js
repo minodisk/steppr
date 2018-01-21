@@ -1,5 +1,6 @@
 // @flow
 
+const { EventEmitter } = require("events");
 const chalk = require("chalk");
 const { dots } = require("cli-spinners");
 
@@ -67,7 +68,7 @@ const defaultStyle: Style = {
   },
   info: {
     color: chalk.blue,
-    sign: "ⓘ"
+    sign: "i"
   },
   warn: {
     color: chalk.yellow,
@@ -87,7 +88,16 @@ const defaultStyle: Style = {
   }
 };
 
-class Step {
+export type StateChangedEvent = {
+  type: string,
+  target: Step,
+  state: State,
+  shouldBeRendered: boolean
+};
+
+const STATE_CHANGED = "STATE_CHANGED";
+
+class Step extends EventEmitter {
   style: Style;
   indent: string;
   message: string;
@@ -96,6 +106,7 @@ class Step {
   children: Array<Step>;
 
   constructor(title: string = "", style?: StyleOptional) {
+    super();
     this.style = {
       ...defaultStyle,
       ...style
@@ -110,6 +121,20 @@ class Step {
   start(message?: string) {
     this.state = "running";
     this.update(message);
+    this.emitStateChanged();
+  }
+
+  emitStateChanged() {
+    this.emit(STATE_CHANGED, {
+      type: STATE_CHANGED,
+      target: this,
+      state: this.state,
+      shouldBeRendered: this.shouldBeRendered()
+    });
+  }
+
+  bubbleUp(e: Event) {
+    this.emit(e.type, e);
   }
 
   update(message?: string) {
@@ -132,13 +157,24 @@ class Step {
     }`;
   }
 
-  complete(): boolean {
-    return this.state !== "pending" && this.state !== "running";
+  shouldBeRendered(): boolean {
+    const should = this.state !== "pending" && this.state !== "running";
+    return this.children.reduce(
+      (s: boolean, child: Step) => s || child.shouldBeRendered(),
+      should
+    );
   }
 
   add(child: Step) {
     child.indent = this.indent + this.style.indent;
     this.children.push(child);
+    child.on(STATE_CHANGED, e => this.bubbleUp(e));
+  }
+
+  spawn(title: string): Step {
+    const child = new Step(title, { ...this.style });
+    this.add(child);
+    return child;
   }
 
   prefix(currentFrame: number) {
@@ -183,31 +219,36 @@ class Step {
     this.update(message);
     this.state = "info";
     this.log();
+    this.emitStateChanged();
   }
 
   warn(message?: string) {
     this.update(message);
     this.state = "warn";
     this.log();
+    this.emitStateChanged();
   }
 
   error(message?: string) {
     this.update(message);
     this.state = "error";
     this.log();
+    this.emitStateChanged();
   }
 
   success(message?: string) {
     this.update(message);
     this.state = "success";
     this.log();
+    this.emitStateChanged();
   }
 
   skip(message?: string) {
     this.update(message);
     this.state = "skipped";
     this.log();
+    this.emitStateChanged();
   }
 }
 
-module.exports = Step;
+module.exports = { Step, STATE_CHANGED };

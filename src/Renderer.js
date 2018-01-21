@@ -2,7 +2,8 @@
 
 const { EventEmitter } = require("events");
 const { create } = require("log-update");
-const Step = require("./Step");
+const { Step, STATE_CHANGED } = require("./Step");
+import type { StateChangedEvent } from "./Step";
 
 type Options = {
   stream: WritableStream,
@@ -47,15 +48,17 @@ class Renderer extends EventEmitter {
   }
 
   start() {
-    this.stop();
-    this.currentFrame = 0;
-    this.intervalId = setInterval(() => this.render(), this.mspf);
+    if (this.rendering()) this.stop();
+    this.intervalId = setInterval(() => this.onTick(), this.mspf);
   }
 
   stop() {
-    if (!this.intervalId == null) return;
     clearInterval(this.intervalId);
     delete this.intervalId;
+  }
+
+  rendering() {
+    return this.intervalId != null;
   }
 
   render() {
@@ -70,6 +73,23 @@ class Renderer extends EventEmitter {
 
   add(child: Step) {
     this.children.push(child);
+    child.on(STATE_CHANGED, e => this.onStateChanged(e));
+  }
+
+  onTick() {
+    this.render();
+    const shouldBeRendered = this.children.reduce(
+      (s: boolean, child: Step): boolean => s || child.shouldBeRendered(),
+      false
+    );
+    if (!shouldBeRendered) {
+      this.stop();
+    }
+  }
+
+  onStateChanged(e: StateChangedEvent) {
+    if (e.complete || this.rendering()) return;
+    this.start();
   }
 }
 
