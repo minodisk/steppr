@@ -3,32 +3,32 @@
 import type { State, CompiledStyles } from "./types";
 
 class Step {
-  title: string;
+  compiledTitle: string;
+  compiledLog: string;
   styles: CompiledStyles;
   children: Array<Step>;
   depth: number;
-  logMessage: string;
   state: State;
 
   constructor(title: string, styles: CompiledStyles) {
     this.styles = styles;
+    this.compiledLog = "";
     this.children = [];
     this.depth = 0;
-    this.logMessage = "";
     this.state = "pending";
-    this.setTitle(title);
+    this.title(title);
   }
 
   toString(currentFrame: number): string {
     return [
       this.line(currentFrame),
-      ...this.children.map(child => child.toString(currentFrame))
+      ...this.children.map(child => child.toString(currentFrame)),
     ].join("\n");
   }
 
   line(currentFrame: number) {
-    return `${this.indent()}${this.sign(currentFrame)}${this.title}${
-      this.logMessage
+    return `${this.indent()}${this.sign(currentFrame)}${this.compiledTitle}${
+      this.compiledLog
     }`;
   }
 
@@ -90,18 +90,20 @@ class Step {
     return false;
   }
 
-  setTitle(title: string) {
-    this.title = this.styles.title.color(this.styles.title.sign + title);
+  title(title: string) {
+    this.compiledTitle = this.styles.title.color(
+      this.styles.title.sign + title,
+    );
   }
 
   log(...messages: Array<string>) {
     const message = messages.join(" ");
     if (message === "") {
-      this.logMessage = "";
+      this.compiledLog = "";
       return;
     }
-    this.logMessage = this.styles.log.color(
-      `${this.styles.log.sign}${message}`
+    this.compiledLog = this.styles.log.color(
+      `${this.styles.log.sign}${message}`,
     );
   }
 

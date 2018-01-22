@@ -4,13 +4,8 @@ const chalk = require("chalk");
 const { dots } = require("cli-spinners");
 const symbols = require("log-symbols");
 const Step = require("./Step");
-import type {
-  OptionalStyles,
-  Styles,
-  CompiledStyles,
-  SignStyle,
-  SpinnerStyle
-} from "./types";
+const { compileStyles } = require("./utils");
+import type { OptionalStyles, Styles, CompiledStyles } from "./types";
 
 const noop = (text: string) => text;
 const defaultStyles: Styles = {
@@ -49,42 +44,16 @@ const defaultStyles: Styles = {
     sign: "↓"
   }
 };
-const compileSign = (sign: SignStyle): string => sign.color(sign.sign);
-const compileSpinner = (spinner: SpinnerStyle): Array<string> =>
-  spinner.frames.map((frame: string): string => spinner.color(frame));
 
 class StepContainer {
   styles: CompiledStyles;
   children: Array<Step>;
 
   constructor(styles?: OptionalStyles) {
-    const {
-      indent,
-      title,
-      log,
-      pending,
-      running,
-      info,
-      warn,
-      error,
-      success,
-      skipped
-    }: Styles = {
+    this.styles = compileStyles({
       ...defaultStyles,
       ...styles
-    };
-    this.styles = {
-      indent,
-      title,
-      log,
-      pending: compileSpinner(pending),
-      running: compileSpinner(running),
-      info: compileSign(info),
-      warn: compileSign(warn),
-      error: compileSign(error),
-      success: compileSign(success),
-      skipped: compileSign(skipped)
-    };
+    });
     this.children = [];
   }
 
