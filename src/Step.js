@@ -1,31 +1,20 @@
 // @flow
 
-const { EventEmitter } = require("events");
 const chalk = require("chalk");
 const { dots } = require("cli-spinners");
 
-type State =
-  | "pending"
-  | "running"
-  | "info"
-  | "warn"
-  | "error"
-  | "success"
-  | "skipped";
+type Color = (text: string) => string;
 
 type Sign = {
   color: Color,
   sign: string
 };
-
 type Spinner = {
   color: Color,
   frames: Array<string>
 };
 
-type Color = (text: string) => string;
-
-type Style = {
+type Styles = {
   indent: string,
   message: Sign,
   log: Sign,
@@ -37,7 +26,7 @@ type Style = {
   success: Sign,
   skipped: Sign
 };
-type StyleOptional = {
+type OptionalStyles = {
   indent?: string,
   message?: Sign,
   log?: Sign,
@@ -50,8 +39,17 @@ type StyleOptional = {
   skipped?: Sign
 };
 
+type State =
+  | "pending"
+  | "running"
+  | "info"
+  | "warn"
+  | "error"
+  | "success"
+  | "skipped";
+
 const noop = (text: string) => text;
-const defaultStyle: Style = {
+const defaultStyles: Styles = {
   indent: " ",
   message: { color: noop, sign: " " },
   log: {
@@ -88,121 +86,134 @@ const defaultStyle: Style = {
   }
 };
 
-export type StateChangedEvent = {
-  type: string,
-  target: Step,
-  state: State,
-  shouldBeRendered: boolean
+const repeat = (text: string, length: number) => {
+  let t = "";
+  for (let i = 0; i < length; i++) {
+    t += text;
+  }
+  return t;
 };
 
-const STATE_CHANGED = "STATE_CHANGED";
+class RootStep {
+  styles: Styles;
+  children: Array<Step>;
 
-class Step extends EventEmitter {
-  style: Style;
-  indent: string;
+  constructor(styles?: OptionalStyles) {
+    this.styles = {
+      ...defaultStyles,
+      ...styles
+    };
+    this.children = [];
+  }
+
+  toString(currentFrame: number): string {
+    return this.childrenLines(currentFrame).join("\n");
+  }
+
+  childrenLines(currentFrame: number): Array<string> {
+    return this.children.map(child => child.toString(currentFrame));
+  }
+
+  add(child: Step) {
+    this.children.push(child);
+  }
+
+  spawn(title: string): Step {
+    const child = new Step(title, { ...this.styles });
+    this.add(child);
+    return child;
+  }
+
+  shouldBeRendered(): boolean {
+    for (const child of this.children) {
+      if (child.shouldBeRendered()) {
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+class Step extends RootStep {
+  depth: number;
   message: string;
   logMessage: string;
   state: State;
-  children: Array<Step>;
 
-  constructor(title: string = "", style?: StyleOptional) {
-    super();
-    this.style = {
-      ...defaultStyle,
-      ...style
-    };
-    this.indent = "";
+  constructor(title: string = "", styles?: OptionalStyles) {
+    super(styles);
+    this.depth = 0;
     this.logMessage = "";
     this.state = "pending";
-    this.children = [];
     this.update(title);
   }
 
   start(message?: string) {
     this.state = "running";
     this.update(message);
-    this.emitStateChanged();
-  }
-
-  emitStateChanged() {
-    this.emit(STATE_CHANGED, {
-      type: STATE_CHANGED,
-      target: this,
-      state: this.state,
-      shouldBeRendered: this.shouldBeRendered()
-    });
-  }
-
-  bubbleUp(e: Event) {
-    this.emit(e.type, e);
   }
 
   update(message?: string) {
     if (message == null) {
       return;
     }
-    this.message = this.style.message.color(this.style.message.sign + message);
+    this.message = this.styles.message.color(
+      this.styles.message.sign + message
+    );
   }
 
-  toString(currentFrame: number = 0): string {
-    return [
-      this.line(currentFrame),
-      ...this.children.map(child => child.toString(currentFrame))
-    ].join("\n");
+  toString(currentFrame: number): string {
+    return [this.line(currentFrame), ...this.childrenLines(currentFrame)].join(
+      "\n"
+    );
   }
 
   line(currentFrame: number) {
-    return `${this.indent}${this.prefix(currentFrame)}${this.message}${
+    return `${this.prefix()}${this.sign(currentFrame)}${this.message}${
       this.logMessage
     }`;
   }
 
   shouldBeRendered(): boolean {
-    const should = this.state !== "pending" && this.state !== "running";
-    return this.children.reduce(
-      (s: boolean, child: Step) => s || child.shouldBeRendered(),
-      should
-    );
+    if (this.state === "pending" || this.state === "running") return true;
+    return super.shouldBeRendered();
   }
 
   add(child: Step) {
-    child.indent = this.indent + this.style.indent;
-    this.children.push(child);
-    child.on(STATE_CHANGED, e => this.bubbleUp(e));
+    child.depth = this.depth + 1;
+    super.add(child);
   }
 
-  spawn(title: string): Step {
-    const child = new Step(title, { ...this.style });
-    this.add(child);
-    return child;
+  prefix(): string {
+    return repeat(this.styles.indent, this.depth);
   }
 
-  prefix(currentFrame: number) {
+  sign(currentFrame: number) {
     switch (this.state) {
       default:
         return "";
       case "pending":
-        return this.style.pending.color(
-          this.style.pending.frames[
-            currentFrame % this.style.pending.frames.length
+        return this.styles.pending.color(
+          this.styles.pending.frames[
+            currentFrame % this.styles.pending.frames.length
           ]
         );
       case "running":
-        return this.style.running.color(
-          this.style.running.frames[
-            currentFrame % this.style.running.frames.length
+        return this.styles.running.color(
+          this.styles.running.frames[
+            currentFrame % this.styles.running.frames.length
           ]
         );
       case "info":
-        return this.style.info.color(this.style.info.sign);
+        return this.styles.info.color(this.styles.info.sign);
       case "warn":
-        return this.style.warn.color(this.style.warn.sign);
+        return this.styles.warn.color(this.styles.warn.sign);
       case "error":
-        return this.style.error.color(this.style.error.sign);
+        return this.styles.error.color(this.styles.error.sign);
       case "success":
-        return this.style.success.color(this.style.success.sign);
+        return this.styles.success.color(this.styles.success.sign);
       case "skipped":
-        return this.style.skipped.color(this.style.skipped.sign);
+        return this.styles.skipped.color(this.styles.skipped.sign);
     }
   }
 
@@ -212,43 +223,40 @@ class Step extends EventEmitter {
       this.logMessage = "";
       return;
     }
-    this.logMessage = this.style.log.color(`${this.style.log.sign}${message}`);
+    this.logMessage = this.styles.log.color(
+      `${this.styles.log.sign}${message}`
+    );
   }
 
   info(message?: string) {
     this.update(message);
     this.state = "info";
     this.log();
-    this.emitStateChanged();
   }
 
   warn(message?: string) {
     this.update(message);
     this.state = "warn";
     this.log();
-    this.emitStateChanged();
   }
 
   error(message?: string) {
     this.update(message);
     this.state = "error";
     this.log();
-    this.emitStateChanged();
   }
 
   success(message?: string) {
     this.update(message);
     this.state = "success";
     this.log();
-    this.emitStateChanged();
   }
 
   skip(message?: string) {
     this.update(message);
     this.state = "skipped";
     this.log();
-    this.emitStateChanged();
   }
 }
 
-module.exports = { Step, STATE_CHANGED };
+module.exports = { RootStep, Step };

@@ -2,15 +2,14 @@
 
 const { EventEmitter } = require("events");
 const { create } = require("log-update");
-const { Step, STATE_CHANGED } = require("./Step");
-import type { StateChangedEvent } from "./Step";
+const { RootStep, Step } = require("./Step");
 
 type Options = {
   stream: WritableStream,
   fps: number,
   autoStart: boolean
 };
-type OptionsOptional = {
+type OptionalOptions = {
   stream?: WritableStream,
   fps?: number,
   autoStart?: boolean
@@ -22,34 +21,34 @@ type WritableStream = {
 const defaultOptions: Options = {
   stream: process.stdout,
   fps: 12,
-  autoStart: true
+  autoStart: true,
+  autoStop: true
 };
 
 class Renderer extends EventEmitter {
-  mspf: number;
+  options: Options;
   write: (text: string) => void;
   currentFrame: number;
   intervalId: number;
-  children: Array<Step>;
+  root: RootStep;
 
-  constructor(options?: OptionsOptional) {
+  constructor(options?: OptionalOptions) {
     super();
-    const opts: Options = {
+    this.options = {
       ...defaultOptions,
       ...options
     };
-    this.mspf = 1000 / opts.fps;
-    this.write = create(opts.stream);
+    this.write = create(this.options.stream);
     this.currentFrame = 0;
-    this.children = [];
-    if (opts.autoStart) {
+    this.root = new RootStep();
+    if (this.options.autoStart) {
       this.start();
     }
   }
 
   start() {
-    if (this.rendering()) this.stop();
-    this.intervalId = setInterval(() => this.onTick(), this.mspf);
+    if (this.running()) this.stop();
+    this.intervalId = setInterval(() => this.onTick(), 1000 / this.options.fps);
   }
 
   stop() {
@@ -57,39 +56,27 @@ class Renderer extends EventEmitter {
     delete this.intervalId;
   }
 
-  rendering() {
+  running() {
     return this.intervalId != null;
   }
 
   render() {
-    const output = this.children
-      .map(child => child.toString(this.currentFrame))
-      .join("\n");
+    const output = this.root.toString(this.currentFrame);
     this.write(output);
     this.emit("rendered", output);
     this.currentFrame++;
     return output;
   }
 
-  add(child: Step) {
-    this.children.push(child);
-    child.on(STATE_CHANGED, e => this.onStateChanged(e));
-  }
-
   onTick() {
     this.render();
-    const shouldBeRendered = this.children.reduce(
-      (s: boolean, child: Step): boolean => s || child.shouldBeRendered(),
-      false
-    );
-    if (!shouldBeRendered) {
+    if (
+      this.options.autoStop &&
+      this.running() &&
+      !this.root.shouldBeRendered()
+    ) {
       this.stop();
     }
-  }
-
-  onStateChanged(e: StateChangedEvent) {
-    if (e.complete || this.rendering()) return;
-    this.start();
   }
 }
 
