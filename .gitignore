@@ -59,3 +59,9 @@ typings/
 
 # Build
 lib
+
+# AES key
+*.aes
+
+# Env files
+*.env
