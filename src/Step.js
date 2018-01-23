@@ -1,212 +1,139 @@
 // @flow
 
-const chalk = require("chalk");
-const { dots } = require("cli-spinners");
-
-type State =
-  | "pending"
-  | "running"
-  | "info"
-  | "warn"
-  | "error"
-  | "success"
-  | "skipped";
-
-type Sign = {
-  color: Color,
-  sign: string
-};
-
-type Spinner = {
-  color: Color,
-  frames: Array<string>
-};
-
-type Color = (text: string) => string;
-
-type Style = {
-  indent: string,
-  message: Sign,
-  log: Sign,
-  pending: Spinner,
-  running: Spinner,
-  info: Sign,
-  warn: Sign,
-  error: Sign,
-  success: Sign,
-  skipped: Sign
-};
-type StyleOptional = {
-  indent?: string,
-  message?: Sign,
-  log?: Sign,
-  pending?: Spinner,
-  running?: Spinner,
-  info?: Sign,
-  warn?: Sign,
-  error?: Sign,
-  success?: Sign,
-  skipped?: Sign
-};
-
-const noop = (text: string) => text;
-const defaultStyle: Style = {
-  indent: " ",
-  message: { color: noop, sign: " " },
-  log: {
-    color: chalk.gray,
-    sign: " -> "
-  },
-  pending: {
-    color: chalk.gray,
-    frames: dots.frames
-  },
-  running: {
-    color: chalk.cyan,
-    frames: dots.frames
-  },
-  info: {
-    color: chalk.blue,
-    sign: "ⓘ"
-  },
-  warn: {
-    color: chalk.yellow,
-    sign: "⚠"
-  },
-  error: {
-    color: chalk.red,
-    sign: "✖"
-  },
-  success: {
-    color: chalk.green,
-    sign: "✓"
-  },
-  skipped: {
-    color: chalk.gray,
-    sign: "↓"
-  }
-};
+import type { State, CompiledStyles } from "./types";
 
 class Step {
-  style: Style;
-  indent: string;
-  message: string;
-  logMessage: string;
-  state: State;
+  compiledTitle: string;
+  compiledLog: string;
+  styles: CompiledStyles;
   children: Array<Step>;
+  depth: number;
+  state: State;
 
-  constructor(title: string = "", style?: StyleOptional) {
-    this.style = {
-      ...defaultStyle,
-      ...style
-    };
-    this.indent = "";
-    this.logMessage = "";
-    this.state = "pending";
+  constructor(title: string, styles: CompiledStyles) {
+    this.styles = styles;
+    this.compiledLog = "";
     this.children = [];
-    this.update(title);
+    this.depth = 0;
+    this.state = "pending";
+    this.title(title);
   }
 
-  start(message?: string) {
-    this.state = "running";
-    this.update(message);
-  }
-
-  update(message?: string) {
-    if (message == null) {
-      return;
-    }
-    this.message = this.style.message.color(this.style.message.sign + message);
-  }
-
-  toString(currentFrame: number = 0): string {
+  toString(currentFrame: number): string {
     return [
       this.line(currentFrame),
-      ...this.children.map(child => child.toString(currentFrame))
+      ...this.children.map(child => child.toString(currentFrame)),
     ].join("\n");
   }
 
   line(currentFrame: number) {
-    return `${this.indent}${this.prefix(currentFrame)}${this.message}${
-      this.logMessage
+    return `${this.indent()}${this.sign(currentFrame)}${this.compiledTitle}${
+      this.compiledLog
     }`;
   }
 
-  complete(): boolean {
-    return this.state !== "pending" && this.state !== "running";
+  indent(): string {
+    let indent = "";
+    for (let i = 0; i < this.depth; i++) {
+      if (i === 0) {
+        indent += " ";
+        continue;
+      }
+      indent += "  ";
+    }
+    return indent;
+  }
+
+  sign(currentFrame: number): string {
+    switch (this.state) {
+      case "pending":
+        return this.styles.pending[currentFrame % this.styles.pending.length];
+      case "running":
+        return this.styles.running[currentFrame % this.styles.running.length];
+      case "info":
+        return this.styles.info;
+      case "warn":
+        return this.styles.warn;
+      case "error":
+        return this.styles.error;
+      case "success":
+        return this.styles.success;
+      case "skipped":
+        return this.styles.skipped;
+    }
+    throw new Error(`Unexpected State: state '${this.state}' isn't defined`);
+  }
+
+  setDepth(depth: number) {
+    this.depth = depth;
   }
 
   add(child: Step) {
-    child.indent = this.indent + this.style.indent;
+    child.setDepth(this.depth + 1);
     this.children.push(child);
   }
 
-  prefix(currentFrame: number) {
-    switch (this.state) {
-      default:
-        return "";
-      case "pending":
-        return this.style.pending.color(
-          this.style.pending.frames[
-            currentFrame % this.style.pending.frames.length
-          ]
-        );
-      case "running":
-        return this.style.running.color(
-          this.style.running.frames[
-            currentFrame % this.style.running.frames.length
-          ]
-        );
-      case "info":
-        return this.style.info.color(this.style.info.sign);
-      case "warn":
-        return this.style.warn.color(this.style.warn.sign);
-      case "error":
-        return this.style.error.color(this.style.error.sign);
-      case "success":
-        return this.style.success.color(this.style.success.sign);
-      case "skipped":
-        return this.style.skipped.color(this.style.skipped.sign);
+  spawn(title: string): Step {
+    const child = new Step(title, { ...this.styles });
+    this.add(child);
+    return child;
+  }
+
+  shouldBeRendered(): boolean {
+    if (this.state === "pending" || this.state === "running") return true;
+    for (const child of this.children) {
+      if (child.shouldBeRendered()) {
+        return true;
+      }
     }
+    return false;
+  }
+
+  title(title: string) {
+    this.compiledTitle = this.styles.title.color(
+      this.styles.title.sign + title,
+    );
   }
 
   log(...messages: Array<string>) {
     const message = messages.join(" ");
     if (message === "") {
-      this.logMessage = "";
+      this.compiledLog = "";
       return;
     }
-    this.logMessage = this.style.log.color(`${this.style.log.sign}${message}`);
+    this.compiledLog = this.styles.log.color(
+      `${this.styles.log.sign}${message}`,
+    );
   }
 
-  info(message?: string) {
-    this.update(message);
+  start(message?: string = "") {
+    this.state = "running";
+    this.log(message);
+  }
+
+  info(message: string = "") {
     this.state = "info";
-    this.log();
+    this.log(message);
   }
 
-  warn(message?: string) {
-    this.update(message);
+  warn(message: string = "") {
     this.state = "warn";
-    this.log();
+    this.log(message);
   }
 
-  error(message?: string) {
-    this.update(message);
+  error(message: string = "") {
     this.state = "error";
-    this.log();
+    this.log(message);
   }
 
-  success(message?: string) {
-    this.update(message);
+  success(message: string = "") {
     this.state = "success";
-    this.log();
+    this.log(message);
   }
 
-  skip(message?: string) {
-    this.update(message);
+  skip(message: string = "") {
     this.state = "skipped";
-    this.log();
+    this.log(message);
   }
 }
 

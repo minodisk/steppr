@@ -2,74 +2,67 @@
 
 const { EventEmitter } = require("events");
 const { create } = require("log-update");
-const Step = require("./Step");
-
-type Options = {
-  stream: WritableStream,
-  fps: number,
-  autoStart: boolean
-};
-type OptionsOptional = {
-  stream?: WritableStream,
-  fps?: number,
-  autoStart?: boolean
-};
-type WritableStream = {
-  write(chunk: string): boolean
-};
+import type { Renderable, Options, OptionalOptions } from "./types";
 
 const defaultOptions: Options = {
   stream: process.stdout,
   fps: 12,
-  autoStart: true
+  autoStart: true,
+  autoStop: true
 };
 
 class Renderer extends EventEmitter {
-  mspf: number;
+  container: Renderable;
+  options: Options;
   write: (text: string) => void;
   currentFrame: number;
   intervalId: number;
-  children: Array<Step>;
 
-  constructor(options?: OptionsOptional) {
+  constructor(container: Renderable, options?: OptionalOptions) {
     super();
-    const opts: Options = {
+    this.container = container;
+    this.options = {
       ...defaultOptions,
       ...options
     };
-    this.mspf = 1000 / opts.fps;
-    this.write = create(opts.stream);
+    this.write = create(this.options.stream);
     this.currentFrame = 0;
-    this.children = [];
-    if (opts.autoStart) {
+    if (this.options.autoStart) {
       this.start();
     }
   }
 
   start() {
-    this.stop();
-    this.currentFrame = 0;
-    this.intervalId = setInterval(() => this.render(), this.mspf);
+    if (this.running()) this.stop();
+    this.intervalId = setInterval(() => this.onTick(), 1000 / this.options.fps);
   }
 
   stop() {
-    if (!this.intervalId == null) return;
     clearInterval(this.intervalId);
     delete this.intervalId;
   }
 
+  running(): boolean {
+    return this.intervalId != null;
+  }
+
   render() {
-    const output = this.children
-      .map(child => child.toString(this.currentFrame))
-      .join("\n");
+    const output = this.container.toString(this.currentFrame);
     this.write(output);
     this.emit("rendered", output);
     this.currentFrame++;
-    return output;
   }
 
-  add(child: Step) {
-    this.children.push(child);
+  onTick() {
+    this.emit("tick");
+    this.render();
+    if (
+      this.options.autoStop &&
+      this.running() &&
+      !this.container.shouldBeRendered()
+    ) {
+      this.stop();
+    }
   }
 }
 
