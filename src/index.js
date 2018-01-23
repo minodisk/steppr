@@ -8,9 +8,8 @@ const steppr = (
   options?: OptionalOptions,
   styles?: OptionalStyles
 ): StepContainer => {
-  const renderer = new Renderer(options);
   const container = new StepContainer(styles);
-  renderer.setContainer(container);
+  const renderer = new Renderer(container, options);
   return container;
 };
 

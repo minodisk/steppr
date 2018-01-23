@@ -6,6 +6,7 @@
   "author": "Daisuke Mino",
   "license": "MIT",
   "files": ["LICENSE", "README.md", "lib", "package.json"],
+  "engines": { "node": ">=6.12.3" },
   "scripts": {
     "build":
       "rm -rf lib && yarn flow-remove-types -d lib src && yarn flow-copy-source src lib && yarn format",

@@ -12,4 +12,3 @@ COPY src src
 COPY __tests__ __tests__
 
 CMD yarn build
-
