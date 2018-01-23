@@ -1,8 +1,3 @@
 - name: Test
   service: node
-  command: yarn test --coverage
-
-- name: Upload coverage
-  service: node
-  command: yarn codecov
-  tag: master
+  command: sh -c "yarn test --coverage && yarn codecov"

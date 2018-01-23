@@ -5,14 +5,10 @@
   "main": "lib/index.js",
   "author": "Daisuke Mino",
   "license": "MIT",
-  "files": [
-    "LICENSE",
-    "README.md",
-    "lib",
-    "package.json"
-  ],
+  "files": ["LICENSE", "README.md", "lib", "package.json"],
   "scripts": {
-    "build": "rm -rf lib && yarn flow-remove-types -d lib src && yarn flow-copy-source src lib && yarn format",
+    "build":
+      "rm -rf lib && yarn flow-remove-types -d lib src && yarn flow-copy-source src lib && yarn format",
     "format": "yarn prettier --write README.md src/*.js lib/*.js",
     "test": "yarn jest"
   },
