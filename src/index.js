@@ -6,7 +6,7 @@ import type { OptionalOptions, OptionalStyles } from "./types";
 
 const steppr = (
   options?: OptionalOptions,
-  styles?: OptionalStyles,
+  styles?: OptionalStyles
 ): StepContainer => {
   const renderer = new Renderer(options);
   const container = new StepContainer(styles);

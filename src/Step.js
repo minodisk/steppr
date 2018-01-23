@@ -44,10 +44,8 @@ class Step {
     return indent;
   }
 
-  sign(currentFrame: number) {
+  sign(currentFrame: number): string {
     switch (this.state) {
-      default:
-        return "";
       case "pending":
         return this.styles.pending[currentFrame % this.styles.pending.length];
       case "running":
@@ -63,6 +61,7 @@ class Step {
       case "skipped":
         return this.styles.skipped;
     }
+    throw new Error(`Unexpected State: state '${this.state}' isn't defined`);
   }
 
   setDepth(depth: number) {

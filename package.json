@@ -5,22 +5,13 @@
   "main": "lib/index.js",
   "author": "Daisuke Mino",
   "license": "MIT",
-  "files": [
-    "LICENSE",
-    "README.md",
-    "lib",
-    "package.json"
-  ],
+  "files": ["LICENSE", "README.md", "lib", "package.json"],
   "scripts": {
-    "build": "rm -rf lib && yarn flow-remove-types -d lib src && yarn flow-copy-source src lib && yarn format",
+    "build":
+      "rm -rf lib && yarn flow-remove-types -d lib src && yarn flow-copy-source src lib && yarn format",
     "test": "yarn jest",
     "format": "yarn prettier --write README.md src/*.js lib/*.js",
     "prepublish": "yarn build"
-  },
-  "jest": {
-    "transform": {
-      "\\.js$": "./jest/flow-remove-types"
-    }
   },
   "dependencies": {
     "chalk": "^2.3.0",
@@ -29,6 +20,7 @@
     "log-update": "^2.3.0"
   },
   "devDependencies": {
+    "babel-preset-flow": "^6.23.0",
     "flow-bin": "^0.59.0",
     "flow-copy-source": "^1.2.1",
     "flow-remove-types": "^1.2.3",

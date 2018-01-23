@@ -1,14 +1,21 @@
 // @flow
 
+export interface Renderable {
+  toString(frame: number): string;
+  shouldBeRendered(): boolean;
+}
+
 export type OptionalOptions = {
   stream?: WritableStream,
   fps?: number,
-  autoStart?: boolean
+  autoStart?: boolean,
+  autoStop?: boolean
 };
 export type Options = {
   stream: WritableStream,
   fps: number,
-  autoStart: boolean
+  autoStart: boolean,
+  autoStop: boolean
 };
 
 export type WritableStream = {

@@ -13,7 +13,7 @@ const compileStyles = (styles: Styles): CompiledStyles => {
     warn: compileSign(styles.warn),
     error: compileSign(styles.error),
     success: compileSign(styles.success),
-    skipped: compileSign(styles.skipped),
+    skipped: compileSign(styles.skipped)
   };
 };
 

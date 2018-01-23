@@ -2,8 +2,7 @@
 
 const { EventEmitter } = require("events");
 const { create } = require("log-update");
-const StepContainer = require("./StepContainer");
-import type { Options, OptionalOptions } from "./types";
+import type { Renderable, Options, OptionalOptions } from "./types";
 
 const defaultOptions: Options = {
   stream: process.stdout,
@@ -13,14 +12,15 @@ const defaultOptions: Options = {
 };
 
 class Renderer extends EventEmitter {
+  container: Renderable;
   options: Options;
   write: (text: string) => void;
   currentFrame: number;
   intervalId: number;
-  container: StepContainer;
 
-  constructor(options?: OptionalOptions) {
+  constructor(container: Renderable, options?: OptionalOptions) {
     super();
+    this.container = container;
     this.options = {
       ...defaultOptions,
       ...options
@@ -30,10 +30,6 @@ class Renderer extends EventEmitter {
     if (this.options.autoStart) {
       this.start();
     }
-  }
-
-  setContainer(container: StepContainer) {
-    this.container = container;
   }
 
   start() {
@@ -50,15 +46,15 @@ class Renderer extends EventEmitter {
     return this.intervalId != null;
   }
 
-  render(): string {
+  render() {
     const output = this.container.toString(this.currentFrame);
     this.write(output);
     this.emit("rendered", output);
     this.currentFrame++;
-    return output;
   }
 
   onTick() {
+    this.emit("tick");
     this.render();
     if (
       this.options.autoStop &&
