@@ -22,7 +22,7 @@ class Step {
   toString(currentFrame: number): string {
     return [
       this.line(currentFrame),
-      ...this.children.map(child => child.toString(currentFrame)),
+      ...this.children.map(child => child.toString(currentFrame))
     ].join("\n");
   }
 
@@ -91,7 +91,7 @@ class Step {
 
   title(title: string) {
     this.compiledTitle = this.styles.title.color(
-      this.styles.title.sign + title,
+      this.styles.title.sign + title
     );
   }
 
@@ -102,7 +102,7 @@ class Step {
       return;
     }
     this.compiledLog = this.styles.log.color(
-      `${this.styles.log.sign}${message}`,
+      `${this.styles.log.sign}${message}`
     );
   }
 

@@ -1,3 +1,3 @@
-# steppr
+# steppr [![Codeship Status for minodisk/steppr](https://img.shields.io/codeship/a0d22550-e21e-0135-05d1-2a55b7ee6e99/master.svg?style=flat-square)](https://app.codeship.com/projects/261653) [![codecov](https://img.shields.io/codecov/c/github/minodisk/steppr/master.svg?style=flat-square)](https://codecov.io/gh/minodisk/steppr) [![typed with: Flow](https://img.shields.io/badge/typed%20with-Flow-E7BC35.svg?style=flat-square)](https://flow.org/) [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier) [![MIT License](https://img.shields.io/github/license/minodisk/steppr.svg?style=flat-square)](./LICENSE)
 
 Terminal spinner for step execution.
