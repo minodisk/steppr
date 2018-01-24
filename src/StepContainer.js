@@ -65,7 +65,7 @@ class StepContainer {
     this.children.push(child);
   }
 
-  spawn(title: string): Step {
+  spawn(title: string = ""): Step {
     const child = new Step(title, { ...this.styles });
     this.add(child);
     return child;
